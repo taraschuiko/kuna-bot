@@ -4,9 +4,10 @@ const apiUrl = process.env.API_URL
 const getSignedHeaders = require("./helpers/getSignedHeaders")
 
 async function getMarketData() {
-  return await axios.get(`${apiUrl}/tickers?symbols=btcuah`).then(r => ({
-    buyPrice: r.data[0][1],
-    sellPrice: r.data[0][3]
+  return await axios.get(`${apiUrl}/tickers?symbols=btcuah`).then(({ data }) => ({
+    sellPrice: data[0][1],
+    buyPrice: data[0][3],
+    priceChange: data[0][5]
   }))
 }
 
@@ -20,8 +21,20 @@ async function getBalance() {
 }
 
 (async function app() {
-  const marketData = await getMarketData()
-  const balance = await getBalance()
-  console.log(marketData)
-  console.log(balance)
+  boughtPrice = null
+  setInterval(async () => {
+    const marketData = await getMarketData()
+    const balance = await getBalance()
+    console.log(marketData, balance)
+    console.log("bought price", boughtPrice)
+    if (boughtPrice === null) {
+      boughtPrice = marketData.buyPrice
+    } else {
+      if (boughtPrice < marketData.sellPrice) {
+        console.log("Sell!")
+        console.log(`Bought with ${boughtPrice}, sell with ${marketData.sellPrice}`)
+        boughtPrice = null
+      }
+    }
+  }, 5000)
 })()
