@@ -34,8 +34,8 @@ const rl = readline.createInterface({
     if (boughtPrice === null && !stopWhenSold && buyWhenChangePercentIsLowerThan > marketData.prineChangePercent) {
       boughtPrice = marketData.buyPrice
       goal = Math.floor(boughtPrice + boughtPrice * sellWhenPriceIsGreaterByTimes)
-      spentUAH = tradeWithPercentOfUAH * balance.UAH / 100
-      boughtBTC = spentUAH / marketData.buyPrice
+      spentUAH = +(tradeWithPercentOfUAH * balance.UAH / 100).toFixed(2)
+      boughtBTC = +(spentUAH / marketData.buyPrice).toFixed(8)
       console.log("Balance before: ", balance.UAH)
       console.log("Bought with price: ", boughtPrice)
       console.log("Balance after: ", balance.UAH - tradeWithPercentOfUAH * balance.UAH / 100)
