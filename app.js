@@ -41,6 +41,7 @@ const rl = readline.createInterface({
       console.log("Balance after: ", balance.UAH - tradeWithPercentOfUAH * balance.UAH / 100)
       console.log("Spent UAH: ", spentUAH)
       console.log("Got bitcoins: ", boughtBTC)
+      console.log("Goal price is: ", goal)
     } else if (boughtPrice !== null && goal <= marketData.sellPrice) {
       console.log("Sold!")
       console.log(`Bought with ${boughtPrice}, sold with ${marketData.sellPrice}`)
