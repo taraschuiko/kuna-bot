@@ -3,7 +3,7 @@ require("dotenv").config()
 const getMarketData = require("./api/getMarketData")
 const getBalance = require("./api/getBalance")
 
-const developmentMode = process.env.DEVELOPMENT_MODE
+const isAppDevMode = process.env.APP_MODE === "DEV"
 const buyWhenChangePercentIsLowerThan = process.env.BUY_WHEN_CHANGE_PERCENT_IS_LOWER_THAN
 const tradeWithPercentOfUAH = process.env.TRADE_WITH_PERCENT_OF_UAH
 const sellWhenPriceIsGreaterByTimes = process.env.SELL_WHEN_PRICE_IS_GREATER_BY_TIMES
@@ -51,10 +51,10 @@ const rl = readline.createInterface({
       boughtBTC = null
     }
 
-    if (developmentMode) {
+    if (isAppDevMode) {
       console.log("-----------------------------------------------")
-      console.log("Bought price", boughtPrice)
-      console.log("Current sell price", marketData.sellPrice)
+      console.log("Bought price: ", boughtPrice)
+      console.log("Current sell price: ", marketData.sellPrice)
       console.log("Goal is: ", goal)
     }
   }, 5000)
