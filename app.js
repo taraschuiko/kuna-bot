@@ -1,40 +1,57 @@
-const axios = require("axios")
-require('dotenv').config()
-const apiUrl = process.env.API_URL
-const getSignedHeaders = require("./helpers/getSignedHeaders")
+const readline = require("readline")
+require("dotenv").config()
+const getMarketData = require("./api/getMarketData")
+const getBalance = require("./api/getBalance")
 
-async function getMarketData() {
-  return await axios.get(`${apiUrl}/tickers?symbols=btcuah`).then(({ data }) => ({
-    sellPrice: data[0][1],
-    buyPrice: data[0][3],
-    priceChange: data[0][5]
-  }))
-}
+const buyWhenChangePercentIsLowerThan = process.env.BUY_WHEN_CHANGE_PERCENT_IS_LOWER_THAN
+const tradeWithPercentOfUAH = process.env.TRADE_WITH_PERCENT_OF_UAH
+const sellWhenPriceIsGreaterByTimes = process.env.SELL_WHEN_PRICE_IS_GREATER_BY_TIMES
 
-async function getBalance() {
-  return await axios.post(`${apiUrl}/auth/r/wallets`, {}, {headers: getSignedHeaders("/auth/r/wallets", {})})
-    .then(({ data }) => {
-      const balance = {}
-      data.map(item => item[2] !== 0 ? balance[item[1]] = item[2] : null)
-      return balance
-    })
-}
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 (async function app() {
   boughtPrice = null
+  goal = null
+  spentUAH = null
+  boughtBTC = null
+  stopWhenSold = false
+
+  console.log("-----------------------------------------------")
+  console.log("To stop when sold input 's'")
+  rl.on('line', input => {
+    input === "s" ? stopWhenSold = true : null
+    console.log("I'm going to stop when I sell")
+  })
+
   setInterval(async () => {
     const marketData = await getMarketData()
     const balance = await getBalance()
-    console.log(marketData, balance)
-    console.log("bought price", boughtPrice)
-    if (boughtPrice === null) {
+
+    if (boughtPrice === null && !stopWhenSold && buyWhenChangePercentIsLowerThan > marketData.prineChangePercent) {
       boughtPrice = marketData.buyPrice
-    } else {
-      if (boughtPrice < marketData.sellPrice) {
-        console.log("Sell!")
-        console.log(`Bought with ${boughtPrice}, sell with ${marketData.sellPrice}`)
-        boughtPrice = null
-      }
+      goal = Math.floor(boughtPrice + boughtPrice * sellWhenPriceIsGreaterByTimes)
+      spentUAH = tradeWithPercentOfUAH * balance.UAH / 100
+      boughtBTC = spentUAH / marketData.buyPrice
+      console.log("Balance before: ", balance.UAH)
+      console.log("Bought with price: ", boughtPrice)
+      console.log("Balance after: ", balance.UAH - tradeWithPercentOfUAH * balance.UAH / 100)
+      console.log("Spent UAH: ", spentUAH)
+      console.log("Got bitcoins: ", boughtBTC)
+    } else if (boughtPrice !== null && goal <= marketData.sellPrice) {
+      console.log("Sold!")
+      console.log(`Bought with ${boughtPrice}, sold with ${marketData.sellPrice}`)
+      boughtPrice = null
+      goal = null
+      spentUAH = null
+      boughtBTC = null
     }
+
+    console.log("-----------------------------------------------")
+    console.log("Bought price", boughtPrice)
+    console.log("Current sell price", marketData.sellPrice)
+    console.log("Goal is: ", goal)
   }, 5000)
 })()
